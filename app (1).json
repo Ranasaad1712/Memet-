@@ -1,0 +1,45 @@
+{
+  "expo": {
+    "name": "Memet Live",
+    "slug": "memet-live",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#0f0c1b",
+    "splash": {
+      "backgroundColor": "#0f0c1b"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.memetlive.app",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Memet Live needs camera access so you can go live and stream video to your viewers.",
+        "NSMicrophoneUsageDescription": "Memet Live needs microphone access so your viewers can hear you while you stream."
+      }
+    },
+    "android": {
+      "package": "com.memetlive.app",
+      "permissions": [
+        "CAMERA",
+        "RECORD_AUDIO"
+      ]
+    },
+    "plugins": [
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow Memet Live to access your camera to go live.",
+          "microphonePermission": "Allow Memet Live to access your microphone to go live.",
+          "recordAudioAndroid": true
+        }
+      ],
+      [
+        "expo-av",
+        {
+          "microphonePermission": "Allow Memet Live to access your microphone to go live."
+        }
+      ]
+    ]
+  }
+}
