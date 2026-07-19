@@ -1,11 +1,14 @@
 // src/screens/PermissionGateScreen.js
 // Mandatory gate shown right after login. Requests Camera + Microphone access
-// using expo-camera and expo-av before the main app (tab navigator) is loaded.
+// using expo-camera and expo-audio before the main app (tab navigator) loads.
+//
+// NOTE: expo-av was removed from the Expo SDK as of SDK 55 â€” audio recording
+// permission now lives in expo-audio instead.
 
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 import { useCameraPermissions } from 'expo-camera';
-import { Audio } from 'expo-av';
+import { requestRecordingPermissionsAsync } from 'expo-audio';
 import { useAuth } from '../context/AuthContext';
 import { COLORS } from '../theme/colors';
 
@@ -18,7 +21,7 @@ export default function PermissionGateScreen() {
     setRequesting(true);
     try {
       const camResult = await requestCameraPermission();
-      const micResult = await Audio.requestPermissionsAsync();
+      const micResult = await requestRecordingPermissionsAsync();
 
       if (camResult.granted && micResult.granted) {
         grantPermissions();
@@ -37,7 +40,7 @@ export default function PermissionGateScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.icon}>🎥🎙️</Text>
+      <Text style={styles.icon}>ðŸŽ¥ðŸŽ™ï¸</Text>
       <Text style={styles.title}>Enable Camera & Microphone</Text>
       <Text style={styles.subtitle}>
         To go live, chat, and connect with your audience, Memet Live needs access
