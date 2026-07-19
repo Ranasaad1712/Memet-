@@ -1,0 +1,94 @@
+<!-- firebase-hosting/public/recaptcha.html
+     Deployed to Firebase Hosting so it runs on an already-authorized domain
+     (your-project.web.app / your-project.firebaseapp.com). Loaded inside a
+     WebView from the app; only job is to render the reCAPTCHA challenge and
+     post the resulting token back to React Native via postMessage. -->
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+  <title>Verifying...</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      background-color: #0f0c1b;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      font-family: -apple-system, Roboto, sans-serif;
+    }
+    #wrapper { text-align: center; }
+    #status {
+      color: #b3b3b3;
+      font-size: 14px;
+      margin-bottom: 16px;
+    }
+    #recaptcha-container { display: inline-block; }
+  </style>
+</head>
+<body>
+  <div id="wrapper">
+    <div id="status">Loading verification…</div>
+    <div id="recaptcha-container"></div>
+  </div>
+
+  <!-- Firebase compat SDK — the RecaptchaVerifier class only exists on the
+       compat namespace, which is what a plain <script> CDN include needs. -->
+  <script src="https://www.gstatic.com/firebasejs/12.9.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/12.9.0/firebase-auth-compat.js"></script>
+
+  <script>
+    function post(message) {
+      if (window.ReactNativeWebView) {
+        window.ReactNativeWebView.postMessage(JSON.stringify(message));
+      }
+    }
+
+    // Firebase config is injected by the app as a URL query param (base64 JSON)
+    // so this static page never has to hardcode project secrets.
+    function getFirebaseConfig() {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const encoded = params.get('config');
+        return JSON.parse(atob(encoded));
+      } catch (e) {
+        post({ type: 'error', message: 'Missing or invalid firebase config param' });
+        return null;
+      }
+    }
+
+    function renderRecaptcha() {
+      const firebaseConfig = getFirebaseConfig();
+      if (!firebaseConfig) return;
+
+      try {
+        firebase.initializeApp(firebaseConfig);
+
+        window.verifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
+          size: 'normal',
+          callback: function (token) {
+            document.getElementById('status').innerText = 'Verified ✓';
+            post({ type: 'success', token: token });
+          },
+          'expired-callback': function () {
+            post({ type: 'expired' });
+          },
+        });
+
+        window.verifier.render().then(function () {
+          document.getElementById('status').innerText = 'Please complete the check below';
+        }).catch(function (err) {
+          post({ type: 'error', message: err && err.message ? err.message : 'Render failed' });
+        });
+      } catch (err) {
+        post({ type: 'error', message: err && err.message ? err.message : 'Init failed' });
+      }
+    }
+
+    window.onload = renderRecaptcha;
+  </script>
+</body>
+</html>
