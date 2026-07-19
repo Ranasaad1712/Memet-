@@ -36,7 +36,8 @@ export default function LoginScreen() {
       Alert.alert('Missing info', 'Please enter both email and password.');
       return;
     }
-    login({ name: email.split('@')[0] || 'Streamer', email, method: 'email' });
+    // अब यह फायरबेस के login फंक्शन को सही तरीके से कॉल करेगा
+    login(email, password);
   };
 
   const handleSendOtp = async () => {
@@ -69,6 +70,9 @@ export default function LoginScreen() {
     try {
       const userCredential = await confirmOtp(confirmationResultRef.current, otp);
       const user = userCredential.user;
+      
+      // Phone login के लिए भी इसे अपडेट करना पड़ सकता है भविष्य में
+      // फिलहाल इसे ऐसे ही रहने देते हैं
       login({
         name: user.displayName || `User ${phone.slice(-4)}`,
         phone: user.phoneNumber || phone,
@@ -83,7 +87,7 @@ export default function LoginScreen() {
   };
 
   const handleGoogleLogin = () => {
-    login({ name: 'Google User', email: 'googleuser@gmail.com', method: 'google' });
+    Alert.alert("Notice", "Google login will be connected soon!");
   };
 
   return (
@@ -276,3 +280,4 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
 });
+      
