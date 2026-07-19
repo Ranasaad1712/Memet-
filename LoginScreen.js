@@ -36,7 +36,7 @@ export default function LoginScreen() {
       Alert.alert('Missing info', 'Please enter both email and password.');
       return;
     }
-    // अब यह फायरबेस के login फंक्शन को सही तरीके से कॉल करेगा
+    // Now this correctly calls the Firebase login function
     login(email, password);
   };
 
@@ -51,8 +51,7 @@ export default function LoginScreen() {
 
     setSendingOtp(true);
     try {
-      // Opens the WebView modal, waits for the user to complete the
-      // challenge, and resolves with a reCAPTCHA token.
+      // Opens the WebView modal, waits for the user to complete the challenge
       const verifier = createWebviewRecaptchaVerifier(() => recaptchaRef.current.verify());
       const confirmationResult = await sendOtp(phone, verifier);
       confirmationResultRef.current = confirmationResult;
@@ -71,8 +70,7 @@ export default function LoginScreen() {
       const userCredential = await confirmOtp(confirmationResultRef.current, otp);
       const user = userCredential.user;
       
-      // Phone login के लिए भी इसे अपडेट करना पड़ सकता है भविष्य में
-      // फिलहाल इसे ऐसे ही रहने देते हैं
+      // Phone login implementation
       login({
         name: user.displayName || `User ${phone.slice(-4)}`,
         phone: user.phoneNumber || phone,
