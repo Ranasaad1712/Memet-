@@ -1,0 +1,63 @@
+// firestore.rules
+//
+// IMPORTANT: the client-side listener (useBanListener.js) improves UX by
+// showing "Access Denied" immediately, but it is NOT the security boundary —
+// anyone can strip that check out of a decompiled/modified APK. These rules
+// are what actually stop a banned user's writes at the database level no
+// matter what client they use.
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isBanned(uid) {
+      let user = get(/databases/$(database)/documents/users/$(uid)).data;
+      return user.status == 'banned' &&
+        (user.bannedUntil == null || user.bannedUntil > request.time);
+    }
+
+    function isSuperAdmin() {
+      return isSignedIn() && request.auth.token.isSuperAdmin == true;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (request.auth.token.isAdmin == true || isSuperAdmin());
+    }
+
+    match /users/{uid} {
+      allow read: if isSignedIn();
+      // Users can update their own profile fields, but NEVER their own
+      // status/ban fields — only admins (via Cloud Functions, which run
+      // with the Admin SDK and bypass these rules) can touch those.
+      allow update: if isSignedIn() && request.auth.uid == uid
+        && !isBanned(request.auth.uid)
+        && !request.resource.data.diff(resource.data).affectedKeys()
+              .hasAny(['status', 'bannedUntil', 'bannedBy', 'coinBalance', 'shellBalance']);
+      allow create: if isSignedIn() && request.auth.uid == uid;
+    }
+
+    match /gifts/{giftId} {
+      allow create: if isSignedIn() && !isBanned(request.auth.uid);
+      allow read: if isSignedIn();
+    }
+
+    match /partyRooms/{roomId}/{document=**} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn() && !isBanned(request.auth.uid);
+    }
+
+    match /settings/{document=**} {
+      allow read: if isSignedIn();
+      allow write: if isSuperAdmin(); // only the owner account can change rates/splits
+    }
+
+    match /securityLogs/{document=**} {
+      allow read: if isAdmin();
+      allow write: if false; // only written by Cloud Functions (Admin SDK)
+    }
+  }
+}
